@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg?style=flat-square)](LICENSE)
 
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/AtfQPh8T2T)
-[![Email](https://img.shields.io/badge/Email-Gmail_SMTP-00D4AA?style=flat-square)](https://gmail.com/)
+[![Email](https://img.shields.io/badge/Email-AgentMail-00D4AA?style=flat-square)](https://agentmail.to/)
 [![Webhook](https://img.shields.io/badge/Webhook-Support-00D4AA?style=flat-square)](#)
 [![Slack](https://img.shields.io/badge/Slack-Integration-00D4AA?style=flat-square)](https://slack.com/)
 [![Telegram](https://img.shields.io/badge/Telegram-Bot-00D4AA?style=flat-square)](https://telegram.org/)
@@ -44,12 +44,12 @@
 - **Customizable Prompts**: 9 pre-built templates (comprehensive, research, business, technical, etc.) or create your own
 - **Multilingual Support**: Generate news in 13+ languages including English, Chinese, Spanish, French, Japanese, and more
 - **Chinese News Sources**: Built-in support for Chinese AI news sources (36Kr, JiQiZhiXin, etc.)
-- **Multiple Notification Channels**: Supports email (Gmail SMTP), webhook, Slack, Telegram, and Discord notifications
+- **Multiple Notification Channels**: Supports email (AgentMail), webhook, Slack, Telegram, and Discord notifications
 - **Flexible Configuration**: Easy-to-customize topics and notification settings via YAML config
 - **Automated Scheduling**: GitHub Actions workflow for daily automated execution
 - **Robust Error Handling**: Comprehensive logging and retry logic
 - **Email Client Compatible**: Works perfectly in Gmail, Outlook, Apple Mail, and mobile email apps
-- **Simple Email Setup**: Just use your Gmail account with App Password - no third-party email service needed
+- **Simple Email Setup**: Just an AgentMail API key and inbox - no SMTP server or app passwords needed
 
 ### 📸 Example Screenshots
 
@@ -112,11 +112,11 @@ Add the following secrets:
 
 | Secret Name          | Example Value           | Description                                                                    |
 | -------------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| `GMAIL_ADDRESS`      | `you@gmail.com`         | Your Gmail address                                                             |
-| `GMAIL_APP_PASSWORD` | `xxxx xxxx xxxx xxxx`   | Gmail App Password ([Get one here](https://myaccount.google.com/apppasswords)) |
+| `AGENTMAIL_API_KEY`  | `am-...`                | Your AgentMail API key ([Get one here](https://agentmail.to))                  |
+| `AGENTMAIL_INBOX`    | `bot@agentmail.to`      | Inbox id to send from (reused every run)                                       |
 | `EMAIL_TO`           | `recipient@example.com` | Recipient email address                                                        |
 
-See [Email Setup Guide](#email-setup-guide) for detailed Gmail configuration instructions.
+See [Email Setup Guide](#email-setup-guide) for detailed AgentMail configuration instructions.
 
 #### 🌍 Optional Secrets
 
@@ -193,9 +193,9 @@ LLM_PROVIDER=claude  # Options: 'claude' or 'deepseek'
 ANTHROPIC_API_KEY=your_api_key_here      # For Claude
 DEEPSEEK_API_KEY=your_deepseek_api_key   # For DeepSeek
 
-# Gmail Configuration (easy setup!)
-GMAIL_ADDRESS=your_email@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx   # 16-char App Password (NOT your Gmail password)
+# AgentMail Configuration (easy setup!)
+AGENTMAIL_API_KEY=your_agentmail_api_key   # Get one at https://agentmail.to
+AGENTMAIL_INBOX=bot@agentmail.to           # Inbox id to send from (reused every run)
 EMAIL_TO=recipient@example.com
 
 # Optional: Webhook Configuration
@@ -305,8 +305,8 @@ The bot requires the following configuration. How you set them depends on your d
 | `NOTIFICATION_METHODS` | ✅ Required       | Comma-separated list: `email`, `webhook`, `slack`, `telegram`, `discord`, or any combination (e.g., `email,slack,telegram`)                      |
 | `AI_RESPONSE_LANGUAGE` | Optional          | Language code(s) for AI responses (default: `en`). Use commas for multiple (e.g., `en,zh,ja`). Supports: `zh`, `es`, `fr`, `ja`, `de`, `ko`, `pt`, `ru`, `ar`, `hi`, `it`, `nl` |
 | `ENABLE_WEB_SEARCH`    | Optional          | Enable web search for news (default: `false`)                                                                                                    |
-| `GMAIL_ADDRESS`        | If using Gmail    | Your Gmail address                                                                                                               |
-| `GMAIL_APP_PASSWORD`   | If using Gmail    | Gmail App Password (16 characters, NOT regular password)                                                                         |
+| `AGENTMAIL_API_KEY`    | If using email    | Your AgentMail API key ([Get it here](https://agentmail.to))                                                                     |
+| `AGENTMAIL_INBOX`      | If using email    | AgentMail inbox id to send from (reused every run; if blank, a new inbox is created each run)                                    |
 | `EMAIL_TO`             | If using email    | Recipient email address                                                                                                          |
 | `WEBHOOK_URL`          | If using webhook  | Webhook endpoint URL                                                                                                             |
 | `SLACK_WEBHOOK_URL`    | If using Slack    | Slack Incoming Webhook URL                                                                                                       |
@@ -530,8 +530,8 @@ Add the following secrets one by one:
 
 | Secret Name          | Example Value           | Description                                                                    |
 | -------------------- | ----------------------- | ------------------------------------------------------------------------------ |
-| `GMAIL_ADDRESS`      | `you@gmail.com`         | Your Gmail address                                                             |
-| `GMAIL_APP_PASSWORD` | `xxxx xxxx xxxx xxxx`   | Gmail App Password ([Get one here](https://myaccount.google.com/apppasswords)) |
+| `AGENTMAIL_API_KEY`  | `am-...`                | Your AgentMail API key ([Get one here](https://agentmail.to))                  |
+| `AGENTMAIL_INBOX`    | `bot@agentmail.to`      | Inbox id to send from (reused every run)                                       |
 | `EMAIL_TO`           | `recipient@example.com` | Recipient email address                                                        |
 
 #### 🔗 Webhook Secrets (if using webhook notifications)
@@ -708,42 +708,44 @@ Run the bot locally and check the generated HTML email content.
 
 ## Email Setup Guide
 
-Gmail SMTP is the easiest way to send emails - just use your existing Gmail account!
+[AgentMail](https://agentmail.to) gives the bot its own inbox to send from - no SMTP server or app passwords needed.
 
-### Step 1: Enable 2-Step Verification
+### Step 1: Get an API Key
 
-1. Go to your [Google Account Security](https://myaccount.google.com/security)
-2. Click on **2-Step Verification**
-3. Follow the prompts to enable it (required for App Passwords)
+1. Sign up at [agentmail.to](https://agentmail.to)
+2. Create an API key from the dashboard (looks like `am-...`)
 
-### Step 2: Create an App Password
+### Step 2: Create an Inbox
 
-1. Go to [Google App Passwords](https://myaccount.google.com/apppasswords)
-   - Or: Google Account → Security → 2-Step Verification → App passwords
-2. Select app: **Mail**
-3. Select device: **Other** (enter "AI News Bot")
-4. Click **Generate**
-5. Copy the 16-character password (looks like: `xxxx xxxx xxxx xxxx`)
+Create one inbox and reuse it every run (recommended, so the bot always sends from the same address). You can create it in the AgentMail dashboard, or once from Python:
 
-> ⚠️ **Important**: This is NOT your regular Gmail password. Keep this App Password safe!
+```python
+from agentmail import AgentMail
+
+client = AgentMail(api_key="am-...")
+inbox = client.inboxes.create()
+print(inbox.inbox_id)  # e.g. bot@agentmail.to
+```
+
+> ℹ️ If you leave `AGENTMAIL_INBOX` blank, a new inbox (and sender address) is created on every run. Set it to a fixed inbox id to keep the same address.
 
 ### Step 3: Configure Environment
 
 ```env
-# Gmail Configuration
-GMAIL_ADDRESS=your_email@gmail.com
-GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+# AgentMail Configuration
+AGENTMAIL_API_KEY=your_agentmail_api_key
+AGENTMAIL_INBOX=bot@agentmail.to
 EMAIL_TO=recipient@example.com
 NOTIFICATION_METHODS=email
 ```
 
-That's it! Your Gmail is ready to send news digests.
+That's it! AgentMail is ready to send news digests.
 
-### Troubleshooting Gmail
+### Troubleshooting AgentMail
 
-- **"Authentication failed"**: Make sure you're using the App Password, not your regular password
-- **"Less secure apps"**: This is outdated. Use App Passwords instead
-- **Can't find App Passwords**: You must enable 2-Step Verification first
+- **"Authentication failed" / 401**: Check that `AGENTMAIL_API_KEY` is set correctly
+- **A new sender address every run**: Set `AGENTMAIL_INBOX` to a fixed inbox id
+- **Email not received**: Verify `EMAIL_TO` and check the recipient's spam folder
 
 ## Notification Channels Setup
 
@@ -879,10 +881,9 @@ Ensure `config.yaml` exists in the project root.
 
 ### Email Not Sending
 
-- Make sure you're using an **App Password**, not your regular Gmail password
-- Verify 2-Step Verification is enabled on your Google account
-- Check that `GMAIL_ADDRESS` and `GMAIL_APP_PASSWORD` are set correctly
-- App Password should be 16 characters (with or without spaces)
+- Check that `AGENTMAIL_API_KEY` is set correctly (a 401 means it's wrong or missing)
+- Set `AGENTMAIL_INBOX` to a fixed inbox id so the bot sends from the same address each run
+- Verify `EMAIL_TO` is correct and check the recipient's spam folder
 
 ### Webhook Failing
 

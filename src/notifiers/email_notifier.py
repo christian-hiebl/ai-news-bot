@@ -1,10 +1,7 @@
 """
-Email notification module using Gmail SMTP
+Email notification module using AgentMail (https://agentmail.to)
 """
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 from datetime import datetime
 from ..logger import setup_logger
@@ -14,40 +11,36 @@ logger = setup_logger(__name__)
 
 
 class EmailNotifier:
-    """Send email notifications with AI news digest using Gmail SMTP"""
+    """Send email notifications with AI news digest via the AgentMail API"""
 
     def __init__(
         self,
-        gmail_address: Optional[str] = None,
-        gmail_app_password: Optional[str] = None,
+        api_key: Optional[str] = None,
+        inbox_id: Optional[str] = None,
         email_to: Optional[str] = None,
     ):
         """
-        Initialize EmailNotifier with Gmail SMTP.
+        Initialize EmailNotifier with AgentMail.
 
         Args:
-            gmail_address: Your Gmail address
-            gmail_app_password: App Password from Google Account settings
-              (NOT your regular Gmail password - see README for setup instructions)
+            api_key: AgentMail API key (from https://agentmail.to)
+            inbox_id: AgentMail inbox id to send from. If omitted, a new inbox
+              is created on first send.
             email_to: Recipient email address
 
         All parameters default to environment variables if not provided.
         """
-        self.gmail_address = gmail_address or os.getenv("GMAIL_ADDRESS")
-        self.gmail_app_password = gmail_app_password or os.getenv("GMAIL_APP_PASSWORD")
+        self.api_key = api_key or os.getenv("AGENTMAIL_API_KEY")
+        self.inbox_id = inbox_id or os.getenv("AGENTMAIL_INBOX")
         self.email_to = email_to or os.getenv("EMAIL_TO")
 
-        # Gmail SMTP settings
-        self.smtp_server = "smtp.gmail.com"
-        self.smtp_port = 587
-
-        if not all([self.gmail_address, self.gmail_app_password, self.email_to]):
+        if not all([self.api_key, self.email_to]):
             logger.warning(
-                "Gmail notifier not fully configured. "
-                "Required: GMAIL_ADDRESS, GMAIL_APP_PASSWORD, EMAIL_TO"
+                "AgentMail notifier not fully configured. "
+                "Required: AGENTMAIL_API_KEY, EMAIL_TO"
             )
         else:
-            logger.info(f"EmailNotifier initialized with Gmail SMTP (from: {self.gmail_address})")
+            logger.info("EmailNotifier initialized with AgentMail")
 
     def send(self, content: str, subject: Optional[str] = None, language: str = "en") -> bool:
         """
@@ -67,46 +60,36 @@ class EmailNotifier:
             lang_suffix = f" [{language.upper()}]" if language != "en" else ""
             subject = f"AI News Digest - {today}{lang_suffix}"
 
-        if not all([self.gmail_address, self.gmail_app_password, self.email_to]):
-            logger.error("Gmail notifier is not fully configured. Skipping email send.")
+        if not all([self.api_key, self.email_to]):
+            logger.error("AgentMail notifier is not fully configured. Skipping email send.")
             return False
 
         try:
-            # Create HTML email content
+            from agentmail import AgentMail
+
+            client = AgentMail(api_key=self.api_key)
+
+            # Reuse a configured inbox, or create one on first send
+            if not self.inbox_id:
+                self.inbox_id = client.inboxes.create().inbox_id
+                logger.info(f"Created AgentMail inbox: {self.inbox_id}")
+
             html_content = self._create_html_email(content, subject)
 
-            # Create message
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = self.gmail_address
-            msg["To"] = self.email_to
+            logger.info(f"Sending email via AgentMail to {self.email_to}")
+            client.inboxes.messages.send(
+                self.inbox_id,
+                to=self.email_to,
+                subject=subject,
+                text=content,
+                html=html_content,
+            )
 
-            # Attach plain text and HTML versions
-            part1 = MIMEText(content, "plain", "utf-8")
-            part2 = MIMEText(html_content, "html", "utf-8")
-            msg.attach(part1)
-            msg.attach(part2)
-
-            logger.info(f"Sending email via Gmail SMTP to {self.email_to}")
-
-            # Connect and send
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.gmail_address, self.gmail_app_password)
-                server.sendmail(self.gmail_address, self.email_to, msg.as_string())
-
-            logger.info("Email sent successfully via Gmail SMTP")
+            logger.info("Email sent successfully via AgentMail")
             return True
 
-        except smtplib.SMTPAuthenticationError as e:
-            logger.error(
-                f"Gmail authentication failed: {str(e)}. "
-                "Make sure you're using an App Password, not your regular Gmail password. "
-                "See README for setup instructions."
-            )
-            return False
         except Exception as e:
-            logger.error(f"Failed to send email via Gmail: {str(e)}", exc_info=True)
+            logger.error(f"Failed to send email via AgentMail: {str(e)}", exc_info=True)
             return False
 
     def _create_html_email(self, content: str, subject: str) -> str:
