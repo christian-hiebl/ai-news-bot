@@ -80,7 +80,7 @@ news:
          - Technical details, key specifications, or metrics
          - Why it matters (industry significance and impact)
          - Potential implications (future developments, competitive landscape)
-      3. **Source Attribution**: Always include as clickable markdown link: [Source Name](URL)
+      3. **Source Attribution**: Always include as clickable markdown link followed by the article's publication date: [Source Name](URL) — Published: <date>. Use the **Published** date given for the item; if none is available, write "Date not available".
 
       ## WRITING STYLE:
       - Professional, analytical tone suitable for industry professionals
